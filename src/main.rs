@@ -1,6 +1,9 @@
 mod models;
+mod setting;
 
+use dotenv::dotenv;
 use models::Status;
+use setting::Setting;
 use actix_web::{web, App, HttpServer, Responder};
 
 async fn status() -> impl Responder {
@@ -10,11 +13,18 @@ async fn status() -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+
+    dotenv().ok();
+
+    let config = Setting::from_env().unwrap();
+
+    println!("Starting server at http://{}:{}", config.server.host, config.server.port);
+
     HttpServer::new(|| {
         App::new()
             .route("/", web::get().to(status))
     })
-    .bind("127.0.0.1:8080")?
+    .bind(format!("{}:{}", config.server.host, config.server.port))?
     .run()
     .await
 }
